@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>초등학교 저학년 사칙연산 계산기</h1>
+    항1: <input type="number" id="a" value="10"><br>
+    항2: <input type="number" id="b" value="3"><br>
+    연산자: <select id="oper">
+        <option value="plus">+</option>
+        <option value="min">-</option>
+        <option value="mult">*</option>
+        <option value="div">/</option>
+    </select>
+    <button id="btn">확인</button>
+    <div id="result">결과: </div>
+    <script>
+        // btn을 클릭하면 항1, 항2의 값을 서버에 전송하고 그 결과를 돌려 받기
+        var inputA = document.getElementById("a");
+        var inputB = document.getElementById("b");
+        var selectOper = document.getElementById("oper");
+        var buttonBtn = document.getElementById("btn");
+        var divResult = document.getElementById("result");
+
+        buttonBtn.onclick = function(event) {
+            var a = inputA.value;
+            var b = inputB.value;
+            var oper = selectOper.value;
+            console.log("버튼 눌렀다!", a, b, oper);
+
+            // 오늘 배운 Ajax를 이용해서 FastAPI 서버와 통신 되는 기능 구현.
+            // url을 만들어서 서버에 요청
+            // 요청 결과를 화면에 출력
+
+            var xhttp = new XMLHttpRequest();
+            // console.dir(xhttp);
+
+            xhttp.onload = function(event) {
+                // console.dir(event.target == xhttp) // true
+                if(event.target.status == 200 && event.target.statusText == 'OK') {
+                    //console.log(xhttp.responseText);
+
+                    // JSON 문자열
+                    // Javascript의 Object는 파이썬의 Dict와 유사하다.
+                    resultObj = JSON.parse(xhttp.responseText)
+                    console.log(resultObj.a, resultObj.b, resultObj.result);
+
+                    // divResult에 innerText 속성을 이용해서 결과 출력
+                    divResult.innerHTML = `<h3>결과: 
+                        ${resultObj["a"]}${resultObj["oper"]}${resultObj["b"]}
+                        =${resultObj["result"]}
+                    </h3>`
+                }
+            }
+
+            xhttp.open("GET", `/${oper}/${Number(a)}/${Number(b)}`, true)
+
+            xhttp.send()
+        }
+    </script>
+</body>
+</html>
+
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>초등학교 저학년 사칙연산 계산기</h1>
+    항1: <input type="number" id="a" value="10"><br>
+    항2: <input type="number" id="b" value="3"><br>
+    연산자: <select id="oper">
+        <option value="plus">+</option>
+        <option value="min">-</option>
+        <option value="mult">*</option>
+        <option value="div">/</option>
+    </select>
+    <button id="btn">확인</button>
+    <div id="result">결과:</div>
+    <script>
+        var inputA = document.getElementById("a");
+        var inputB = document.getElementById("b");
+        var selectOper = document.getElementById("oper");
+        var buttonBtn = document.getElementById("btn");
+        var divResult = document.getElementById("result");
+
+        buttonBtn.onclick = function(event) {
+            var a = inputA.value;
+            var b = inputB.value;
+            var oper = selectOper.value;
+            console.log("버튼 눌렀다!", a, b, oper);
+
+            var xhttp = new XMLHttpRequest();
+
+            xhttp.onload = function(event) {
+                if(event.target.status == 200 && event.target.statusText == 'OK'){
+
+                    resultObj = JSON.parse(xhttp.responseText)
+                    console.log(resultObj.a, resultObj.b, ResultObj.result);
+
+                    divResult.innerHTML = `<h3>결과:
+                        ${resultObj["a"]}${resultObj["oper"]}${resultObj["b"]}
+                        =${resultObj["result"]}
+                    </h3>`
+                }
+
+            }
+
+            xhttp.open("GET", `/${oper}/${Number(a)}/${Number(b)}`, true)
+
+            xhttp.send()
+        }
+    </script>
+</body>
+</html>

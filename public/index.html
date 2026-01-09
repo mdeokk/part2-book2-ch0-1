@@ -1,93 +1,71 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사칙연산 계산기 (XHR)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FastAPI 서버 카운터</title>
 </head>
 <body>
+  <h1>FastAPI 서버 카운터</h1>
 
-<h1>초등학교 저학년 사칙연산 계산기</h1>
+  <div id="result">결과 대기 중 ...</div>
+  <button id="btn">다시 요청</button>
 
-항1: <input type="text" id="a" value="10"><br>
-항2: <input type="text" id="b" value="3"><br>
+  <script>
+    const result = document.getElementById("result");
+    const btn = document.getElementById("btn");
 
-연산자:
-<select id="oper">
-    <option value="plus">+</option>
-    <option value="min">-</option>
-    <option value="mult">*</option>
-    <option value="div">/</option>
-</select>
+    let client_cnt = 0;
 
-<button id="btn">확인</button>
+    function render(obj) {
+      result.innerHTML = `
+        <ul>
+          <li>date: ${obj.dateStr}</li>
+          <li>count: ${obj.count}</li>
+        </ul>
+      `;
+    }
 
-<div>결과: <span id="result">-</span></div>
-<div>상태: <span id="status">대기</span></div>
-
-<script>
-    console.log("XMLHttpRequest Ajax 계산기 시작");
-
-    var BASE_URL = "http://127.0.0.1:8000";
-
-    var inputA = document.getElementById("a");
-    var inputB = document.getElementById("b");
-    var selectOper = document.getElementById("oper");
-    var buttonBtn = document.getElementById("btn");
-
-    var resultSpan = document.getElementById("result");
-    var statusSpan = document.getElementById("status");
-
-    buttonBtn.onclick = function () {
-        var a = inputA.value;
-        var b = inputB.value;
-        var oper = selectOper.value;
-
-        console.log("버튼 눌렀다!", a, b, oper);
-
-        // 숫자 검증
-        var na = Number(a);
-        var nb = Number(b);
-
-        if (Number.isNaN(na) || Number.isNaN(nb)) {
-            statusSpan.textContent = "입력 오류";
-            resultSpan.textContent = "숫자만 입력하세요.";
-            return;
+    // 서버에서 증가된 count를 받아오고, client_cnt도 함께 동기화
+    function requestCount() {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function (e) {
+        const obj = JSON.parse(e.target.responseText);
+        if (obj && typeof obj.count === "number") {
+          render(obj);
+          client_cnt = obj.count; // 중요: 최초에도 client_cnt 동기화
         }
+      };
+      xhr.open("GET", "/count", true); // 같은 호스트면 상대경로 권장
+      xhr.send();
+    }
 
-        // 요청 URL 구성 (Path Parameter)
-        var url = BASE_URL + "/" + oper + "/" + na + "/" + nb;
-        console.log("요청 URL:", url);
+    // 서버 cnt가 더 크면 갱신, 아니면 아무 것도 하지 않음
+    function checkCount() {
+      const xhr2 = new XMLHttpRequest();
+      xhr2.onload = function (e) {
+        // FastAPI에서 None 반환 시 응답이 "null" 이므로 파싱하면 null
+        const data = e.target.responseText;
+        if (!data || data === "null") return;
 
-        // Ajax 객체 생성
-        var xhr = new XMLHttpRequest();
+        const obj = JSON.parse(data);
+        if (obj && typeof obj.count === "number" && obj.count > client_cnt) {
+          render(obj);
+          client_cnt = obj.count; // 중요: 갱신 후 client_cnt 업데이트
+        }
+      };
+      xhr2.open("GET", "/check/" + client_cnt, true);
+      xhr2.send();
+    }
 
-        // 요청 준비
-        xhr.open("GET", url, true);
-
-        // 응답 처리
-        xhr.onload = function () {
-            if (xhr.status === 200) {
-                console.log("서버 응답:", xhr.responseText);
-                resultSpan.textContent = xhr.responseText;
-                statusSpan.textContent = "성공";
-            } else {
-                console.error("서버 오류:", xhr.status);
-                resultSpan.textContent = xhr.responseText;
-                statusSpan.textContent = "오류 (" + xhr.status + ")";
-            }
-        };
-
-        // 네트워크 오류 처리
-        xhr.onerror = function () {
-            statusSpan.textContent = "네트워크 오류";
-            resultSpan.textContent = "-";
-        };
-
-        // 요청 전송
-        xhr.send(null);
+    window.onload = function () {
+      requestCount();
+      setInterval(checkCount, 1000);
     };
-</script>
 
+    btn.onclick = function () {
+      requestCount();
+    };
+  </script>
 </body>
 </html>

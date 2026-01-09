@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>FastAPI 서버 카운터</h1>
+
+    <div id="result">결과 대기 중 ...</div>
+    <button id="btn">다시 요청</button>
+
+    <script>
+        
+        var result = document.getElementById("result");
+        var btn = document.getElementById("btn");
+
+        // 함수 선언 방법
+        /*
+        def 함수명() :
+            pass
+
+        function 함수명() {
+            처리문;
+        }
+        */
+
+        // 변수에 함수를 저장 (참조)
+        // 다른 함수의 매개변수에 함수 전달 가능 (콜백함수)
+        // 자바스크립트는 콜백함수를 많이 사용한다.
+        var requestCount = function(e) {
+            var xhr = new XMLHttpRequest();
+            // 페이지가 모두 브라우저에 로드 되면 ...
+            // Ajax를 이용해서 서버에 요청 해서 서버의 cnt를 받아온다.
+            
+            // javascript는 함수 내부에 다른 함수 선언 가능.
+            xhr.onload = function(e) {
+                obj = JSON.parse(e.target.responseText);
+                result.innerHTML = `
+                    <ul>
+                        <li>date: ${obj.dateStr}</li>
+                        <li>count: ${obj.count}</li>
+                    </ul>
+                `;
+            }
+            xhr.open('GET', 'http://127.0.0.1:8000/check'+client_cnt, true);
+            xhr.send()
+        }
+
+        // 선언된 함수를 재활용한다.
+        window.onload = function(e) {
+            requestCount(e);
+        }
+
+        btn.onclick = function(e) {
+            // 버튼을 클릭하면 count객체를 다시 로드한다.
+            requestCount(e);
+            
+        }
+
+        var client_cnt = 0;
+        // 1초에 한번씩 서버의 cnt 체크하기
+        // 1초에 한번씩 호출되는 함수 선언 (setInterval(), setTimeout())
+        // 시차를 주기 위해 필요한 함수이다.
+        setInterval(function() {
+            console.log('hello', client_cnt);
+            var xhr2 = new XMLHttpRequest();
+            // client_cnt를 서버에 보내서 서버 cnt 변경 cneck하기
+             xhr2.onload = function(e) {
+                // None == null, and 연산자 == &&, or == || 
+                if(obj != null && obj.count > client_cnt) {
+                    obj = JSON.parse(e.target.responseText)
+                    client_cnt = obj.count;
+                    result.innerHTML = `
+                    <ul>
+                        <li>date: ${obj.dateStr}</li>
+                        <li>count: ${obj.count}</li>
+                    </ul>
+                `;
+                client_cnt = obj.count;
+                }
+            }
+            xhr2.open('GET', 'http://127.0.0.1:8000/check'+client_cnt, true);
+            xhr2.send()
+        },1000)
+    </script>
+</body>
+</html>
